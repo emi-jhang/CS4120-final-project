@@ -1,0 +1,9 @@
+scikit-learn
+pandas
+scikit-learn==1.2.2
+nltk
+joblib
+rouge_score
+gensim
+Flask
+flask_cors

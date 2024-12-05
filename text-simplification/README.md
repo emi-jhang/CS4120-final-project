@@ -1,70 +1,44 @@
-# Getting Started with Create React App
+# Text Simplification Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a text simplification application that consists of a **frontend** built with **React** and a **backend** implemented in **Python**. The frontend sends text input to the backend, which processes it and returns a simplified version based on a custom lexicon.
 
-## Available Scripts
+## Prerequisites
 
-In the project directory, you can run:
+Before setting up the application, ensure you have the following installed:
 
-### `npm start`
+- **[Node.js](https://nodejs.org/)** (for the frontend)
+- **[Python](https://www.python.org/)** (for the backend)
+- A Python virtual environment tool (like `venv`) is recommended for isolating dependencies.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Setup Instructions
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 1. Frontend Setup (React)
 
-### `npm test`
+1. Navigate to the project directory that this README.md is located in
+2. Install the necessary dependencies by running: 
+`npm install`
+3. Start the frontend in development mode by running: 
+`npm start`
+This will launch the React development server, and the frontend will be available in your browser at **http://localhost:3000**. Any changes you make to the frontend code will automatically be reflected in the browser.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 2. Backend Setup (Python)
 
-### `npm run build`
+1. Navigate to the src files where server.py and script.py are located
+2. (Optional) Create a virtual environment to manage Python dependencies: 
+`python -m venv venv` 
+`source venv/bin/activate`
+3. Install the backend dependencies listed in requirements.txt by running: 
+`pip install -r requirements.txt`
+4. Start the backend server by running: 
+`python server.py`
+The backend server will run at **http://localhost:5000**. The frontend will communicate with this server to simplify the text. 
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Application Workflow
+1. Open the frontend in your browser at http://localhost:3000.
+2. Enter a sentence or paragraph into the input field.
+3. The frontend sends a request to the backend to simplify the text. 
+4. The backend processes the text and returns a simplified version, which is displayed on the frontend. 
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Troubleshooting
+1. Ensure that both the frontend and backend servers are running.
+2. Inspect the application and navigate to the Network tab for any errors if the text is not being simplified correctly. 
