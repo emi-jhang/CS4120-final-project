@@ -22,8 +22,7 @@ function TextSimplifier() {
       setSimplifiedText(response.data.simplified_text);
     } catch (error) {
       console.error("Error simplifying text:", error);
-      alert(error)
-      // alert("An error occurred while simplifying the text.");
+      alert("An error occurred while simplifying the text.");
     }
   };
 
@@ -58,46 +57,41 @@ function TextSimplifier() {
 
     const speech = new SpeechSynthesisUtterance(simplifiedText);
     speech.lang = 'en-US';
-    speech.rate = 1; // Speed of speech (1.0 is normal)
-    speech.pitch = 1; // Pitch of speech (1.0 is normal)
+    speech.rate = 0.9; 
+    speech.pitch = 1; 
     window.speechSynthesis.speak(speech);
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="container">
       <h1>Text Simplification</h1>
-
-      <p style={{ fontSize: '18px', marginBottom: '20px' }}>
+      <p className="description">
         Enter your text below and press "Simplify" to see a simpler version.
       </p>
 
-      <button onClick={startVoiceInput} style={{ marginBottom: '10px' }}>
-        Start Voice Input
-      </button>
-      
-      <textarea
-        value={text}
-        onChange={handleTextChange}
-        placeholder="Enter text here"
-        rows="10"
-        style={{ width: '100%', marginBottom: '10px' }}
-      />
+      <div className="text-box-container">
+        <div className="input-box">
+          <textarea
+            value={text}
+            onChange={handleTextChange}
+            placeholder="Enter text here"
+            rows="10"
+          />
+          <i className="fa fa-microphone" onClick={startVoiceInput} title="Start Voice Input"></i>
+        </div>
 
-      <button onClick={handleSimplify} style={{ display: 'block', margin: '10px 0' }}>
-        Simplify
-      </button>
+        <button onClick={handleSimplify}>Simplify</button>
 
-      <textarea
-        value={simplifiedText}
-        placeholder="Simplified text will appear here"
-        rows="10"
-        style={{ width: '100%', marginTop: '20px' }}
-        readOnly
-      />
-
-      <button onClick={speakSimplifiedText} style={{ display: 'block', margin: '10px 0' }}>
-        Read Aloud
-      </button>
+        <div className="output-box">
+          <textarea
+            value={simplifiedText}
+            placeholder="Simplified text will appear here"
+            rows="10"
+            readOnly
+          />
+          <i className="fa fa-volume-up" onClick={speakSimplifiedText} title="Read Aloud"></i>
+        </div>
+      </div>
     </div>
   );
 }
