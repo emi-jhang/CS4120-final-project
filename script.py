@@ -444,6 +444,31 @@ def create_parser():
 
     return parser
 
+def get_sentences(sentence):
+    wcl_model = WCL()
+    prob_model = CWID_Prob()
+    bin_model = CWID_Bin()
+    nonnative_model = CWID_Non_Native()
+    results = {}
+
+    wcl_simp, wcl_changed = wcl_model.simplify_sentence(sentence, difficulty_threshold=2.5)
+    results["WCL/pretrained"] = (wcl_simp, wcl_changed)
+
+    prob_simp, prob_changed = prob_model.simplify_sentence(sentence, difficulty_threshold=.2)
+    results["CWID-probabilistic/ours"] = (prob_simp, prob_changed)
+
+    bin_simp, bin_changed = bin_model.simplify_sentence(sentence, difficulty_threshold=.5)
+    results["CWID-binary/ours"] = (bin_simp, bin_changed)
+
+    nonnative_simp, nonnative_changed = nonnative_model.simplify_sentence(sentence, difficulty_threshold=3)
+    results["CWID-nonnative/ours"] = (nonnative_simp, nonnative_changed)
+
+    nonnative_simp2, nonnative_changed2 = nonnative_model.simplify_sentence_pretrain(sentence, difficulty_threshold=3)
+    results["CWID-nonnative/pretrained"] = (nonnative_simp2, nonnative_changed2)
+
+    return results
+
+
 if __name__ == '__main__':
     parser = create_parser()
 
