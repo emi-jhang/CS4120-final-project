@@ -32,7 +32,7 @@ from gensim.models.keyedvectors import KeyedVectors
 import gensim.downloader as api
 
 # word2vec_model = api.load('word2vec-google-news-300')
-model_path = "GoogleNews-vectors-negative300-SLIM.bin.gz"
+model_path = "../../GoogleNews-vectors-negative300-SLIM.bin.gz"
 word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 print("vars")
 
@@ -43,7 +43,7 @@ scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=Tr
 class WCL:
     def __init__(self):
         print("making 1")
-        self.lexicon_data = pd.read_csv('WCL_data/lexicon.csv')
+        self.lexicon_data = pd.read_csv('../../WCL_data/lexicon.csv')
         self.data = self.lexicon_data.dropna(subset=["word", "rating"]) 
         self.X = self.data["word"].values  # Target words
         self.y = self.data["rating"].values.astype(float)
@@ -54,7 +54,7 @@ class WCL:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X_vectors, self.y, test_size=0.2, random_state=42)
 
         # Train regressor
-        self.regressor = joblib.load("WCL_regressor.pkl")
+        self.regressor = joblib.load("../../WCL_regressor.pkl")
 
 
     def simplify_sentence(self, sentence, difficulty_threshold=3):
@@ -113,8 +113,8 @@ class CWID_Prob:
     def __init__(self) -> None:
         print("making 2")
 
-        self.wikipedia_train = pd.read_csv('CWID_train/Wikipedia_Train.csv')
-        self.news_train = pd.read_csv('CWID_train/News_Train.csv')
+        self.wikipedia_train = pd.read_csv('../../CWID_train/Wikipedia_Train.csv')
+        self.news_train = pd.read_csv('../../CWID_train/News_Train.csv')
 
         self.wiki_data = self.wikipedia_train.dropna(subset=["target_word", "probabilistic"]) 
         self.news_data = self.news_train.dropna(subset=["target_word", "probabilistic"]) 
@@ -137,12 +137,12 @@ class CWID_Prob:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X_vectors, self.y, test_size=0.2, random_state=42)
 
         # Train regressor
-        self.regressor = joblib.load('CWID_Prob_Regressor.joblib') 
+        self.regressor = joblib.load('../../CWID_Prob_Regressor.joblib') 
         # sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
         # w2v_sentences = [word_tokenize(sent) for sent in sents]
         # self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
         # self.model.save("our_model.model")
-        self.model = Word2Vec.load("our_model.model")
+        self.model = Word2Vec.load("../../our_model.model")
 
     def simplify_sentence(self, sentence, difficulty_threshold=.25):
         """
@@ -209,8 +209,8 @@ class CWID_Bin:
     def __init__(self) -> None:
         print("making 3")
 
-        self.wikipedia_train = pd.read_csv('CWID_train/Wikipedia_Train.csv')
-        self.news_train = pd.read_csv('CWID_train/News_Train.csv')
+        self.wikipedia_train = pd.read_csv('../../CWID_train/Wikipedia_Train.csv')
+        self.news_train = pd.read_csv('../../CWID_train/News_Train.csv')
 
         self.wiki_data = self.wikipedia_train.dropna(subset=["target_word", "binary"]) 
         self.news_data = self.news_train.dropna(subset=["target_word", "binary"]) 
@@ -225,7 +225,7 @@ class CWID_Bin:
         # sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
         # w2v_sentences = [word_tokenize(sent) for sent in sents]
         # self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
-        self.model = Word2Vec.load("our_model.model")
+        self.model = Word2Vec.load("../../our_model.model")
 
 
         self.X = self.data["target_word"].values  # Target words
@@ -237,7 +237,7 @@ class CWID_Bin:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X_vectors, self.y, test_size=0.2, random_state=42)
 
         # Train regressor
-        self.regressor = joblib.load("CWID_Bin_Regressor.joblib")
+        self.regressor = joblib.load("../../CWID_Bin_Regressor.joblib")
     def simplify_sentence(self, sentence, difficulty_threshold=.5):
         """
         Simplifies a sentence by replacing difficult words with simpler alternatives.
@@ -303,8 +303,8 @@ class CWID_Non_Native:
     def __init__(self) -> None:
         print("making 4")
 
-        self.wikipedia_train = pd.read_csv('CWID_train/Wikipedia_Train.csv')
-        self.news_train = pd.read_csv('CWID_train/News_Train.csv')
+        self.wikipedia_train = pd.read_csv('../../CWID_train/Wikipedia_Train.csv')
+        self.news_train = pd.read_csv('../../CWID_train/News_Train.csv')
 
         self.wiki_data = self.wikipedia_train.dropna(subset=["target_word", "non_native_diff"]) 
         self.news_data = self.news_train.dropna(subset=["target_word", "non_native_diff"]) 
@@ -331,11 +331,11 @@ class CWID_Non_Native:
         # self.regressor = RandomForestClassifier()
         # self.regressor.fit(self.X_train, self.y_train)
         # joblib.dump(self.regressor, "CWID_NonNative_Regressor.joblib")
-        self.regressor = joblib.load("CWID_NonNative_Regressor.joblib")
+        self.regressor = joblib.load("../../CWID_NonNative_Regressor.joblib")
         # sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
         # w2v_sentences = [word_tokenize(sent) for sent in sents]
         # self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
-        self.model = Word2Vec.load("our_model.model")
+        self.model = Word2Vec.load("../../our_model.model")
 
     def simplify_sentence(self, sentence, difficulty_threshold=.25):
         """
@@ -495,9 +495,9 @@ def get_sentences(sentence):
 # if __name__ == '__main__':
 #     parser = create_parser()
 
-    # args = vars(parser.parse_args())
-    # sentence = args['sentence']
-    # print(get_sentences(sentence))
+#     args = vars(parser.parse_args())
+#     sentence = args['sentence']
+#     print(get_sentences(sentence))
     # test_sentences = [
     #     "The obfuscation of the report's findings was intentional, aiming to confound any cursory reader.",
     #     "Despite his ostensible altruism, his ulterior motives became glaringly evident over time.",

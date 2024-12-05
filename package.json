@@ -1,0 +1,20 @@
+{
+  "name": "cs4120-final-project",
+  "version": "1.0.0",
+  "description": "**CWID:** Complex Word Identification Dataset",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emi-jhang/CS4120-final-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/emi-jhang/CS4120-final-project/issues"
+  },
+  "homepage": "https://github.com/emi-jhang/CS4120-final-project#readme"
+}

@@ -1,0 +1,85 @@
+.container {
+  max-width: 90%;
+  margin: 50px auto;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #333;
+  font-size: 24px;
+}
+
+.description {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.text-box-container {
+  width: 100%;
+  align-items: center;
+}
+
+.input-box, .output-box {
+  position: relative;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px 10px; 
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  margin-top: 15px;
+  resize: none;
+}
+
+button {
+  padding: 12px;
+  font-size: 16px;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 5px;
+  width: auto;
+  transition: background-color 0.3s ease;
+  max-width: 20%;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.input-box i,
+.output-box i {
+  position: absolute;
+  top: 75%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #007bff;
+  font-size: 24px;
+  transition: color 0.3s ease;
+}
+
+.input-box i.fa-microphone {
+  left: 15px;
+  bottom: 305px;
+  cursor: pointer;
+}
+
+.input-box i.fa-microphone:hover {
+  color: #0056b3;
+}
+
+.output-box i.fa-volume-up {
+  left: 15px;
+  bottom: 305px;
+  cursor: pointer;
+}
+
+.output-box i.fa-volume-up:hover {
+  color: #0056b3;
+}
