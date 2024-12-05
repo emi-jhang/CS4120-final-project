@@ -22,6 +22,9 @@ from nltk.corpus import wordnet
 import joblib
 
 from rouge_score import rouge_scorer
+from gensim.models import Word2Vec
+
+# train the word2vec model with our cleaned data
 
 # GLOBAL VARIABLES 
 import gensim.downloader as api
@@ -133,6 +136,9 @@ class CWID_Prob:
 
         # Train regressor
         self.regressor = joblib.load('CWID_Prob_Regressor.joblib') 
+
+        self.model = Word2Vec(sentences=list(self.wiki_data['sentence'])+list(self.news_data['sentence']), seed=0, workers=1, sg=0)
+
     def simplify_sentence(self, sentence, difficulty_threshold=.25):
         """
         Simplifies a sentence by replacing difficult words with simpler alternatives.
@@ -161,7 +167,7 @@ class CWID_Prob:
                 difficulty = self.data[self.data['target_word']==word]['probabilistic'].to_numpy()
             if difficulty > difficulty_threshold:
                 try:
-                    similar_words = word2vec_model.most_similar(word, topn=50)
+                    similar_words = self.model.wv.most_similar(word, topn=50)
                     possibilities = []
                     for sim_word, word_sim in similar_words:
                         sim_vector = self.vectorizer.transform([sim_word])
@@ -289,7 +295,6 @@ def create_parser():
 
     return parser
 
-
 if __name__ == '__main__':
     parser = create_parser()
 
@@ -297,9 +302,9 @@ if __name__ == '__main__':
 
     # threshold = args['threshold']
     test_sentences = [
-        "This is a simple sentence.",
-        "Although she was considered smart, she failed all her exams.",
-        "Anachronism in historical contexts can be confusing.",
+        "The obfuscation of the report's findings was intentional, aiming to confound any cursory reader.",
+        "Despite his ostensible altruism, his ulterior motives became glaringly evident over time.",
+        "The juxtaposition of the protagonist's arcane motivations against the antagonist's overt simplicity was striking.",
         "accumulated, thesaurus, differing, terror"
     ]
     print("=" * 100)
@@ -311,7 +316,7 @@ if __name__ == '__main__':
     for sentence in test_sentences:
         simplified, changed_words = wcl_model.simplify_sentence(
             sentence, 
-            difficulty_threshold=2
+            difficulty_threshold=3
         )
         print("Original Sentence:", sentence)
         print("Simplified Sentence:", simplified)
@@ -330,7 +335,7 @@ if __name__ == '__main__':
     for sentence in test_sentences:
         simplified, changed_words = prob_model.simplify_sentence(
             sentence, 
-            difficulty_threshold=.1
+            difficulty_threshold=.3
         )
         print("Original Sentence:", sentence)
         print("Simplified Sentence:", simplified)
