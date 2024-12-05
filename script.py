@@ -41,7 +41,7 @@ class WCL:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X_vectors, self.y, test_size=0.2, random_state=42)
 
         # Train regressor
-        self.regressor = joblib.load("src/WCL_regressor.pkl")
+        self.regressor = joblib.load("WCL_regressor.pkl")
 
 
     def simplify_sentence(self, sentence, difficulty_threshold=3):
