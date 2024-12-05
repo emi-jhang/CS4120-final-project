@@ -8,7 +8,6 @@ Before setting up the application, ensure you have the following installed:
 
 - **[Node.js](https://nodejs.org/)** (for the frontend)
 - **[Python](https://www.python.org/)** (for the backend)
-- A Python virtual environment tool (like `venv`) is recommended for isolating dependencies.
 
 ## Setup Instructions
 
@@ -24,9 +23,6 @@ This will launch the React development server, and the frontend will be availabl
 ### 2. Backend Setup (Python)
 
 1. Navigate to the src files where server.py and script.py are located
-2. (Optional) Create a virtual environment to manage Python dependencies: 
-`python -m venv venv` 
-`source venv/bin/activate`
 3. Install the backend dependencies listed in requirements.txt by running: 
 `pip install -r requirements.txt`
 4. Start the backend server by running: 
