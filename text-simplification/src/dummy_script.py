@@ -1,2 +1,2 @@
 def simplify_text(input_text):
-    return "Hello"
+    return input_text
