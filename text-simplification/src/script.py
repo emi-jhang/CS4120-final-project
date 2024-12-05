@@ -26,9 +26,9 @@ from rouge_score import rouge_scorer
 from gensim.models import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
 
-from keras.models import Sequential
-from keras.layers import Dense, Input
-from keras.optimizers import Adam
+# from keras.models import Sequential
+# from keras.layers import Dense, Input
+# from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 # train the word2vec model with our cleaned data
@@ -794,7 +794,8 @@ if __name__ == '__main__':
     # ]
 
 
-    wcl_model = WCL_Testing()
+    # wcl_model = WCL_Testing()
+    wcl_model = WCL()
     prob_model = CWID_Prob()
     bin_model = CWID_Bin()
     nonnative_model = CWID_Non_Native()
