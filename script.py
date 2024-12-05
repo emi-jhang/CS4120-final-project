@@ -1,4 +1,5 @@
 # IMPORTS
+print("Importing")
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -23,16 +24,25 @@ import joblib
 
 from rouge_score import rouge_scorer
 from gensim.models import Word2Vec
+from gensim.models.keyedvectors import KeyedVectors
 
 # train the word2vec model with our cleaned data
 
 # GLOBAL VARIABLES 
 import gensim.downloader as api
-word2vec_model = api.load('word2vec-google-news-300')
+
+# word2vec_model = api.load('word2vec-google-news-300')
+model_path = "GoogleNews-vectors-negative300-SLIM.bin.gz"
+word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
+print("vars")
+
+# word2vec_model = KeyedVectors.load("pretrained_model.model")
+# word2vec_model.save("pretrained_model.model")
 scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
 
 class WCL:
     def __init__(self):
+        print("making 1")
         self.lexicon_data = pd.read_csv('WCL_data/lexicon.csv')
         self.data = self.lexicon_data.dropna(subset=["word", "rating"]) 
         self.X = self.data["word"].values  # Target words
@@ -101,6 +111,8 @@ class WCL:
 
 class CWID_Prob:
     def __init__(self) -> None:
+        print("making 2")
+
         self.wikipedia_train = pd.read_csv('CWID_train/Wikipedia_Train.csv')
         self.news_train = pd.read_csv('CWID_train/News_Train.csv')
 
@@ -126,9 +138,11 @@ class CWID_Prob:
 
         # Train regressor
         self.regressor = joblib.load('CWID_Prob_Regressor.joblib') 
-        sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
-        w2v_sentences = [word_tokenize(sent) for sent in sents]
-        self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
+        # sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
+        # w2v_sentences = [word_tokenize(sent) for sent in sents]
+        # self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
+        # self.model.save("our_model.model")
+        self.model = Word2Vec.load("our_model.model")
 
     def simplify_sentence(self, sentence, difficulty_threshold=.25):
         """
@@ -193,6 +207,8 @@ class CWID_Prob:
 
 class CWID_Bin:
     def __init__(self) -> None:
+        print("making 3")
+
         self.wikipedia_train = pd.read_csv('CWID_train/Wikipedia_Train.csv')
         self.news_train = pd.read_csv('CWID_train/News_Train.csv')
 
@@ -206,9 +222,10 @@ class CWID_Bin:
 
         # Reset index for a cleaner look
         self.data = self.data.reset_index(drop=True)
-        sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
-        w2v_sentences = [word_tokenize(sent) for sent in sents]
-        self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
+        # sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
+        # w2v_sentences = [word_tokenize(sent) for sent in sents]
+        # self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
+        self.model = Word2Vec.load("our_model.model")
 
 
         self.X = self.data["target_word"].values  # Target words
@@ -284,6 +301,8 @@ class CWID_Bin:
 
 class CWID_Non_Native:
     def __init__(self) -> None:
+        print("making 4")
+
         self.wikipedia_train = pd.read_csv('CWID_train/Wikipedia_Train.csv')
         self.news_train = pd.read_csv('CWID_train/News_Train.csv')
 
@@ -309,12 +328,14 @@ class CWID_Non_Native:
 
         # Train regressor
         # self.regressor = joblib.load('CWID_Prob_Regressor.joblib') 
-        self.regressor = RandomForestClassifier()
-        self.regressor.fit(self.X_train, self.y_train)
-        joblib.dump(self.regressor, "../CWID_NonNative_Regressor.joblib")
-        sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
-        w2v_sentences = [word_tokenize(sent) for sent in sents]
-        self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
+        # self.regressor = RandomForestClassifier()
+        # self.regressor.fit(self.X_train, self.y_train)
+        # joblib.dump(self.regressor, "CWID_NonNative_Regressor.joblib")
+        self.regressor = joblib.load("CWID_NonNative_Regressor.joblib")
+        # sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
+        # w2v_sentences = [word_tokenize(sent) for sent in sents]
+        # self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
+        self.model = Word2Vec.load("our_model.model")
 
     def simplify_sentence(self, sentence, difficulty_threshold=.25):
         """
@@ -445,12 +466,14 @@ def create_parser():
     return parser
 
 def get_sentences(sentence):
+    print("gen models")
     wcl_model = WCL()
     prob_model = CWID_Prob()
     bin_model = CWID_Bin()
     nonnative_model = CWID_Non_Native()
     results = {}
 
+    print("making sentences")
     wcl_simp, wcl_changed = wcl_model.simplify_sentence(sentence, difficulty_threshold=2.5)
     results["WCL/pretrained"] = (wcl_simp, wcl_changed)
 
@@ -472,56 +495,57 @@ def get_sentences(sentence):
 # if __name__ == '__main__':
 #     parser = create_parser()
 
-#     args = vars(parser.parse_args())
-#     sentence = args['sentence']
-#     test_sentences = [
-#         "The obfuscation of the report's findings was intentional, aiming to confound any cursory reader.",
-#         "Despite his ostensible altruism, his ulterior motives became glaringly evident over time.",
-#         "The juxtaposition of the protagonist's arcane motivations against the antagonist's overt simplicity was striking.",
-#         "accumulated, thesaurus, differing, terror"
-#     ]
+    # args = vars(parser.parse_args())
+    # sentence = args['sentence']
+    # print(get_sentences(sentence))
+    # test_sentences = [
+    #     "The obfuscation of the report's findings was intentional, aiming to confound any cursory reader.",
+    #     "Despite his ostensible altruism, his ulterior motives became glaringly evident over time.",
+    #     "The juxtaposition of the protagonist's arcane motivations against the antagonist's overt simplicity was striking.",
+    #     "accumulated, thesaurus, differing, terror"
+    # ]
 
 
-#     wcl_model = WCL()
-#     prob_model = CWID_Prob()
-#     bin_model = CWID_Bin()
-#     nonnative_model = CWID_Non_Native()
-#     print("=" * 100)
-#     print("INPUT:")
-#     print("=" * 100)
-#     print("Original Sentence:", sentence, '\n')
+    # wcl_model = WCL()
+    # prob_model = CWID_Prob()
+    # bin_model = CWID_Bin()
+    # nonnative_model = CWID_Non_Native()
+    # print("=" * 100)
+    # print("INPUT:")
+    # print("=" * 100)
+    # print("Original Sentence:", sentence, '\n')
 
-#     print("=" * 100)
-#     print("WCL DATA: 1 - 6: similarity based on pretrained model")
-#     print("=" * 100)
-#     wcl_simp, wcl_changed = wcl_model.simplify_sentence(sentence, difficulty_threshold=2.5)
-#     print("Simplified Sentence:", wcl_simp)
-#     print("Words Changed:", wcl_changed, "\n")
+    # print("=" * 100)
+    # print("WCL DATA: 1 - 6: similarity based on pretrained model")
+    # print("=" * 100)
+    # wcl_simp, wcl_changed = wcl_model.simplify_sentence(sentence, difficulty_threshold=2.5)
+    # print("Simplified Sentence:", wcl_simp)
+    # print("Words Changed:", wcl_changed, "\n")
 
-#     print("=" * 100)
-#     print("CWID PROB DATA: .1 - 1: similarity based on sentences from this dataset")
-#     print("=" * 100)
-#     prob_simp, prob_changed = prob_model.simplify_sentence(sentence, difficulty_threshold=.2)
-#     print("Simplified Sentence:", prob_simp)
-#     print("Words Changed:", prob_changed, "\n")
+    # print("=" * 100)
+    # print("CWID PROB DATA: .1 - 1: similarity based on sentences from this dataset")
+    # print("=" * 100)
+    # prob_simp, prob_changed = prob_model.simplify_sentence(sentence, difficulty_threshold=.2)
+    # print("Simplified Sentence:", prob_simp)
+    # print("Words Changed:", prob_changed, "\n")
 
-#     print("=" * 100)
-#     print("CWID BINARY DATA: 0/1: similarity based on sentences from this dataset")
-#     print("=" * 100)
-#     bin_simp, bin_changed = bin_model.simplify_sentence(sentence, difficulty_threshold=.5)
-#     print("Simplified Sentence:", bin_simp)
-#     print("Words Changed:", bin_changed, "\n")
+    # print("=" * 100)
+    # print("CWID BINARY DATA: 0/1: similarity based on sentences from this dataset")
+    # print("=" * 100)
+    # bin_simp, bin_changed = bin_model.simplify_sentence(sentence, difficulty_threshold=.5)
+    # print("Simplified Sentence:", bin_simp)
+    # print("Words Changed:", bin_changed, "\n")
 
-#     print("=" * 100)
-#     print("CWID NON-NATIVE DATA: 0 - 10: similarity based on sentences from this dataset")
-#     print("=" * 100)
-#     nonnative_simp, nonnative_changed = nonnative_model.simplify_sentence(sentence, difficulty_threshold=3)
-#     print("Simplified Sentence:", nonnative_simp)
-#     print("Words Changed:", nonnative_changed, "\n")
+    # print("=" * 100)
+    # print("CWID NON-NATIVE DATA: 0 - 10: similarity based on sentences from this dataset")
+    # print("=" * 100)
+    # nonnative_simp, nonnative_changed = nonnative_model.simplify_sentence(sentence, difficulty_threshold=3)
+    # print("Simplified Sentence:", nonnative_simp)
+    # print("Words Changed:", nonnative_changed, "\n")
 
-#     print("=" * 100)
-#     print("CWID NON-NATIVE DATA: 0 - 10: similarity based on pretrained model")
-#     print("=" * 100)
-#     nonnative_simp2, nonnative_changed2 = nonnative_model.simplify_sentence_pretrain(sentence, difficulty_threshold=3)
-#     print("Simplified Sentence:", nonnative_simp2)
-#     print("Words Changed:", nonnative_changed2, "\n")
+    # print("=" * 100)
+    # print("CWID NON-NATIVE DATA: 0 - 10: similarity based on pretrained model")
+    # print("=" * 100)
+    # nonnative_simp2, nonnative_changed2 = nonnative_model.simplify_sentence_pretrain(sentence, difficulty_threshold=3)
+    # print("Simplified Sentence:", nonnative_simp2)
+    # print("Words Changed:", nonnative_changed2, "\n")
