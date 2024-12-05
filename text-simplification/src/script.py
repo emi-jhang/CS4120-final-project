@@ -4,13 +4,22 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import argparse
+import glob
+import os
+import os.path as osp
+import json
 
 import pandas as pd 
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.ensemble import RandomForestClassifier
 import nltk
 nltk.download('punkt')
+from nltk.tokenize import word_tokenize
+from nltk.corpus import wordnet
 import joblib
 
 from rouge_score import rouge_scorer
@@ -481,3 +490,62 @@ def get_sentences(sentence):
     results["CWID-nonnative/pretrained"] = (nonnative_simp2, nonnative_changed2)
 
     return results
+
+
+# if __name__ == '__main__':
+#     parser = create_parser()
+
+#     args = vars(parser.parse_args())
+#     sentence = args['sentence']
+#     print(get_sentences(sentence))
+    # test_sentences = [
+    #     "The obfuscation of the report's findings was intentional, aiming to confound any cursory reader.",
+    #     "Despite his ostensible altruism, his ulterior motives became glaringly evident over time.",
+    #     "The juxtaposition of the protagonist's arcane motivations against the antagonist's overt simplicity was striking.",
+    #     "accumulated, thesaurus, differing, terror"
+    # ]
+
+
+    # wcl_model = WCL()
+    # prob_model = CWID_Prob()
+    # bin_model = CWID_Bin()
+    # nonnative_model = CWID_Non_Native()
+    # print("=" * 100)
+    # print("INPUT:")
+    # print("=" * 100)
+    # print("Original Sentence:", sentence, '\n')
+
+    # print("=" * 100)
+    # print("WCL DATA: 1 - 6: similarity based on pretrained model")
+    # print("=" * 100)
+    # wcl_simp, wcl_changed = wcl_model.simplify_sentence(sentence, difficulty_threshold=2.5)
+    # print("Simplified Sentence:", wcl_simp)
+    # print("Words Changed:", wcl_changed, "\n")
+
+    # print("=" * 100)
+    # print("CWID PROB DATA: .1 - 1: similarity based on sentences from this dataset")
+    # print("=" * 100)
+    # prob_simp, prob_changed = prob_model.simplify_sentence(sentence, difficulty_threshold=.2)
+    # print("Simplified Sentence:", prob_simp)
+    # print("Words Changed:", prob_changed, "\n")
+
+    # print("=" * 100)
+    # print("CWID BINARY DATA: 0/1: similarity based on sentences from this dataset")
+    # print("=" * 100)
+    # bin_simp, bin_changed = bin_model.simplify_sentence(sentence, difficulty_threshold=.5)
+    # print("Simplified Sentence:", bin_simp)
+    # print("Words Changed:", bin_changed, "\n")
+
+    # print("=" * 100)
+    # print("CWID NON-NATIVE DATA: 0 - 10: similarity based on sentences from this dataset")
+    # print("=" * 100)
+    # nonnative_simp, nonnative_changed = nonnative_model.simplify_sentence(sentence, difficulty_threshold=3)
+    # print("Simplified Sentence:", nonnative_simp)
+    # print("Words Changed:", nonnative_changed, "\n")
+
+    # print("=" * 100)
+    # print("CWID NON-NATIVE DATA: 0 - 10: similarity based on pretrained model")
+    # print("=" * 100)
+    # nonnative_simp2, nonnative_changed2 = nonnative_model.simplify_sentence_pretrain(sentence, difficulty_threshold=3)
+    # print("Simplified Sentence:", nonnative_simp2)
+    # print("Words Changed:", nonnative_changed2, "\n")
