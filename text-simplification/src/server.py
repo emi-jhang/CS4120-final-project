@@ -25,10 +25,9 @@ def simplify():
         return jsonify({'error': 'No text provided'}), 400
 
     try:
-        # Simplify the text using your function
+        # Simplify the text using script function
         results = get_sentences(input_text)
         simplified_text = get_first_simplified_sentence(results)
-        # simplified_text = dummy(input_text)
 
         return jsonify({'simplified_text': simplified_text})
     except Exception as e:
