@@ -26,28 +26,20 @@ from rouge_score import rouge_scorer
 from gensim.models import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
 
-# from keras.models import Sequential
-# from keras.layers import Dense, Input
-# from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-# train the word2vec model with our cleaned data
 
 # GLOBAL VARIABLES 
 import gensim.downloader as api
 
-# word2vec_model = api.load('word2vec-google-news-300')
 model_path = "../../GoogleNews-vectors-negative300-SLIM.bin.gz"
 word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 print("vars")
 
-# word2vec_model = KeyedVectors.load("pretrained_model.model")
-# word2vec_model.save("pretrained_model.model")
 scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
 
 class WCL:
     def __init__(self):
-        print("making 1")
         self.lexicon_data = pd.read_csv('../../WCL_data/lexicon.csv')
         self.data = self.lexicon_data.dropna(subset=["word", "rating"]) 
         self.X = self.data["word"].values  # Target words
@@ -81,8 +73,8 @@ class WCL:
         simplified_words = []
         changed_words = []
 
+        # Get difficulty of each word in the sentence from WCL dataset or, if not in dataset, our WCL regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
-
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
@@ -90,6 +82,7 @@ class WCL:
                 difficulty = self.data[self.data['word']==word]['rating'].to_numpy()
             if difficulty > difficulty_threshold:
                 try:
+                    # Get list of similar words from word2vec and append simpler word or, if none found, original work
                     similar_words = word2vec_model.most_similar(word, topn=15)
                     possibilities = []
                     for sim_word, word_sim in similar_words:
@@ -116,8 +109,6 @@ class WCL:
 
 class CWID_Prob:
     def __init__(self) -> None:
-        print("making 2")
-
         self.wikipedia_train = pd.read_csv('../../CWID_train/Wikipedia_Train.csv')
         self.news_train = pd.read_csv('../../CWID_train/News_Train.csv')
 
@@ -143,10 +134,6 @@ class CWID_Prob:
 
         # Train regressor
         self.regressor = joblib.load('../../CWID_Prob_Regressor.joblib') 
-        # sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
-        # w2v_sentences = [word_tokenize(sent) for sent in sents]
-        # self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
-        # self.model.save("our_model.model")
         self.model = Word2Vec.load("../../our_model.model")
 
     def simplify_sentence(self, sentence, difficulty_threshold=.25):
@@ -168,14 +155,15 @@ class CWID_Prob:
         simplified_words = []
         changed_words = []
 
+        # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
-
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
             else: 
                 difficulty = self.data[self.data['target_word']==word]['probabilistic'].to_numpy()
             if difficulty > difficulty_threshold:
+                # Get list of similar words from word2vec and append simpler word or, if none found, original work
                 try:
                     similar_words = self.model.wv.most_similar(word, topn=20)
                     possibilities = []
@@ -185,11 +173,7 @@ class CWID_Prob:
 
                         if sim_difficulty <= difficulty:
                             possibilities.append((sim_word, sim_difficulty))
-                            # simplified_words.append(sim_word) 
-                            # changed_words.append((word, sim_word))
                             break
-                        # else:
-                        #     simplified_words.append(word)
                     if possibilities:
                         lowest_diff = difficulty
                         best_word = word
@@ -227,9 +211,6 @@ class CWID_Bin:
 
         # Reset index for a cleaner look
         self.data = self.data.reset_index(drop=True)
-        # sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
-        # w2v_sentences = [word_tokenize(sent) for sent in sents]
-        # self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
         self.model = Word2Vec.load("../../our_model.model")
 
 
@@ -262,6 +243,7 @@ class CWID_Bin:
         simplified_words = []
         changed_words = []
 
+        # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
             vector = self.vectorizer.transform([word])
             if word not in self.X:
@@ -269,6 +251,7 @@ class CWID_Bin:
             else: 
                 difficulty = self.data[self.data['target_word']==word]['binary'].to_numpy()
             if difficulty > difficulty_threshold:
+                # Get list of similar words from word2vec and append simpler word or, if none found, original work
                 try:
                     similar_words = self.model.wv.most_similar(word, topn=20)
 
@@ -279,11 +262,7 @@ class CWID_Bin:
 
                         if sim_difficulty <= difficulty:
                             possibilities.append((sim_word, sim_difficulty))
-                            # simplified_words.append(sim_word) 
-                            # changed_words.append((word, sim_word))
                             break
-                        # else:
-                        #     simplified_words.append(word)
                     if possibilities:
                         lowest_diff = difficulty
                         best_word = word
@@ -330,16 +309,7 @@ class CWID_Non_Native:
 
         # Train-test split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X_vectors, self.y, test_size=0.2, random_state=42)
-
-        # Train regressor
-        # self.regressor = joblib.load('CWID_Prob_Regressor.joblib') 
-        # self.regressor = RandomForestClassifier()
-        # self.regressor.fit(self.X_train, self.y_train)
-        # joblib.dump(self.regressor, "CWID_NonNative_Regressor.joblib")
         self.regressor = joblib.load("../../CWID_NonNative_Regressor.joblib")
-        # sents = list(self.wiki_data['sentence'])+list(self.news_data['sentence'])
-        # w2v_sentences = [word_tokenize(sent) for sent in sents]
-        # self.model = Word2Vec(w2v_sentences, seed=0, vector_size=100, window=5, min_count=5, workers=4)
         self.model = Word2Vec.load("../../our_model.model")
 
     def simplify_sentence(self, sentence, difficulty_threshold=.25):
@@ -361,6 +331,7 @@ class CWID_Non_Native:
         simplified_words = []
         changed_words = []
 
+        # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
 
             vector = self.vectorizer.transform([word])
@@ -369,6 +340,7 @@ class CWID_Non_Native:
             else: 
                 difficulty = self.data[self.data['target_word']==word]['non_native_diff'].to_numpy()
             if difficulty > difficulty_threshold:
+                # Get list of similar words from word2vec and append simpler word or, if none found, original work
                 try:
                     similar_words = self.model.wv.most_similar(word, topn=20)
                     possibilities = []
@@ -378,11 +350,7 @@ class CWID_Non_Native:
 
                         if sim_difficulty <= difficulty:
                             possibilities.append((sim_word, sim_difficulty))
-                            # simplified_words.append(sim_word) 
-                            # changed_words.append((word, sim_word))
                             break
-                        # else:
-                        #     simplified_words.append(word)
                     if possibilities:
                         lowest_diff = difficulty
                         best_word = word
@@ -421,14 +389,15 @@ class CWID_Non_Native:
         simplified_words = []
         changed_words = []
 
+         # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
-
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
             else: 
                 difficulty = self.data[self.data['target_word']==word]['non_native_diff'].to_numpy()
             if difficulty > difficulty_threshold:
+                # Get list of similar words from word2vec and append simpler word or, if none found, original work
                 try:
                     similar_words = word2vec_model.most_similar(word, topn=20)
                     possibilities = []
@@ -438,11 +407,7 @@ class CWID_Non_Native:
 
                         if sim_difficulty <= difficulty:
                             possibilities.append((sim_word, sim_difficulty))
-                            # simplified_words.append(sim_word) 
-                            # changed_words.append((word, sim_word))
                             break
-                        # else:
-                        #     simplified_words.append(word)
                     if possibilities:
                         lowest_diff = difficulty
                         best_word = word
@@ -471,14 +436,12 @@ def create_parser():
     return parser
 
 def get_sentences(sentence):
-    print("gen models")
     wcl_model = WCL()
     prob_model = CWID_Prob()
     bin_model = CWID_Bin()
     nonnative_model = CWID_Non_Native()
     results = {}
 
-    print("making sentences")
     wcl_simp, wcl_changed = wcl_model.simplify_sentence(sentence, difficulty_threshold=2.5)
     results["WCL/pretrained"] = (wcl_simp, wcl_changed)
 
@@ -569,11 +532,6 @@ class WCL_Testing:
 
         # Train the model
         model.fit(self.X_train, self.y_train, epochs=25, batch_size=32, verbose=0)
-        # Evaluate the model
-        # loss, mae = model.evaluate(self.X_test, self.y_test)
-        # y_pred = model.predict(self.X_test, verbose=0)
-        # print("Mean Squared Error:", mean_squared_error(self.y_test, y_pred))
-        # print("R-squared Score:", r2_score(self.y_test, y_pred))
         return model
 
 class CWID_Prob_Testing:
@@ -661,7 +619,6 @@ class CWID_Prob_Testing:
         # Train the model
         model.fit(self.X_train, self.y_train, epochs=25, batch_size=32, verbose=0)
         # Evaluate the model
-        # loss, mae = model.evaluate(self.X_test, self.y_test)
         y_pred = model.predict(self.X_test, verbose=0)
         print("Mean Squared Error:", mean_squared_error(self.y_test, y_pred))
         print("R-squared Score:", r2_score(self.y_test, y_pred))
@@ -694,11 +651,6 @@ class CWID_Non_Native_Testing:
         # Train-test split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X_vectors, self.y, test_size=0.2, random_state=42)
 
-        # Train regressor
-
-        # self.regressor = joblib.load("../../CWID_NonNative_Regressor.joblib")
-
-        # self.model = Word2Vec.load("../../our_model.model")
     def simplify_sentence(self, sentence, difficulty_threshold=3):
         words = nltk.word_tokenize(sentence)
         simplified_words = []
@@ -756,7 +708,6 @@ class CWID_Non_Native_Testing:
         # Train the model
         model.fit(self.X_train, self.y_train, epochs=25, batch_size=32, verbose=0)
         # Evaluate the model
-        # loss, mae = model.evaluate(self.X_test, self.y_test)
         y_pred = model.predict(self.X_test, verbose=0)
         print("Mean Squared Error:", mean_squared_error(self.y_test, y_pred))
         print("R-squared Score:", r2_score(self.y_test, y_pred))

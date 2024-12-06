@@ -6,23 +6,16 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 def get_first_simplified_sentence(results):
-    # Access the first item from the dictionary
+    # Access the first item from the dictionary to get the simplified sentence
     _, (first_simplified_sentence, _) = next(iter(results.items()))
     
     return first_simplified_sentence
-
-@app.route('/')
-def home():
-    return "Flask server is running!"
 
 
 @app.route('/simplify', methods=['POST'])
 def simplify():
     data = request.json  # Get JSON data from the POST request
     input_text = data.get('text', '')  # Extract 'text' field
-
-    if not input_text.strip():  # Check if text is empty
-        return jsonify({'error': 'No text provided'}), 400
 
     try:
         # Simplify the text using script function

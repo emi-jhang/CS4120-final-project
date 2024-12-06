@@ -7,16 +7,20 @@ function TextSimplifier() {
   const [text, setText] = useState('');
   const [simplifiedText, setSimplifiedText] = useState('');
 
+  // Handle input text being changed
   const handleTextChange = (event) => {
     setText(event.target.value);
   };
 
+  // Handle simplify button being pressed
   const handleSimplify = async () => {
+    // If input text box doesn't have text in it, tell the user to give text input
     if (text.trim() === '') {
       alert("Please enter text for simplification.");
       return;
     }
 
+    // Make http request to backend and if successful, display the simplified text, else display an error alert
     try {
       const response = await axios.post("http://127.0.0.1:5000/simplify", { text });
       setSimplifiedText(response.data.simplified_text);
