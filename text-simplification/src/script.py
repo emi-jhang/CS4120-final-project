@@ -41,6 +41,7 @@ import gensim.downloader as api
 
 model_path = "../../GoogleNews-vectors-negative300-SLIM.bin.gz"
 word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
+our_model = Word2Vec.load("../../our_model.model")
 print("vars")
 
 scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
@@ -179,7 +180,7 @@ class CWID_Prob:
 
         # Train regressor
         self.regressor = joblib.load('../../CWID_Prob_Regressor.joblib') 
-        self.model = Word2Vec.load("../../our_model.model")
+        self.model = our_model
 
     def simplify_sentence(self, sentence, difficulty_threshold=.25):
         """
@@ -251,7 +252,7 @@ class CWID_Bin:
 
         # Reset index for a cleaner look
         self.data = self.data.reset_index(drop=True)
-        self.model = Word2Vec.load("../../our_model.model")
+        self.model = our_model
 
 
         self.X = self.data["target_word"].values  # Target words
@@ -344,9 +345,10 @@ class CWID_Non_Native:
         # Train-test split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X_vectors, self.y, test_size=0.2, random_state=42)
         self.regressor = joblib.load("../../CWID_NonNative_Regressor.joblib")
-        self.model = Word2Vec.load("../../our_model.model")
+        self.model = our_model
+        self.pretrained_model = word2vec_model
 
-    def simplify_sentence(self, sentence, difficulty_threshold=.25):
+    def simplify_sentence(self, sentence, difficulty_threshold=.25, pretrained=False):
         """
         Simplifies a sentence by replacing difficult words with simpler alternatives.
         
@@ -377,7 +379,9 @@ class CWID_Non_Native:
                 # Get list of similar words from word2vec and append simpler word or, if none found, original work
                 try:
                     # Get list of similar words from word2vec and append simpler word or, if none found, original work
-                    similar_words = word2vec_model.most_similar(word, topn=15)
+                    similar_words = self.model.most_similar(word, topn=15)
+                    if pretrained == True:
+                        similar_words = self.pretrained_model.most_similar(word, topn=15)
                     lowest_difficulty_word = word
                     lowest_difficulty = difficulty
                     # Loop through similar words and only use if difficulty is lower so that we get the lowest difficulty word to swap in
@@ -393,64 +397,6 @@ class CWID_Non_Native:
                     # Update lowest difficulty only if simpler word is found
                     if lowest_difficulty_word != word:
                         changed_words.append((word, lowest_difficulty_word))
-                
-                except KeyError:
-                    simplified_words.append(word)
-            else:
-                simplified_words.append(word)
-
-        simplified_sentence = " ".join(simplified_words)
-        return simplified_sentence, changed_words
-
-    def simplify_sentence_pretrain(self, sentence, difficulty_threshold=.25):
-        """
-        Simplifies a sentence by replacing difficult words with simpler alternatives.
-        
-        Args:
-            sentence (str): Input sentence to be simplified.
-            regressor: Trained regressor model for predicting word difficulty.
-            vectorizer: Trained vectorizer for transforming words into features.
-            word2vec_model: Trained Word2Vec model for word similarity.
-            difficulty_threshold (float): Threshold above which words are considered difficult.
-        
-        Returns:
-            str: Simplified sentence.
-        """
-        # Tokenize the sentence into words
-        words = nltk.word_tokenize(sentence)
-        simplified_words = []
-        changed_words = []
-
-         # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
-        for word in words:
-            vector = self.vectorizer.transform([word])
-            if word not in self.X:
-                difficulty = self.regressor.predict(vector)[0]  
-            else: 
-                difficulty = self.data[self.data['target_word']==word]['non_native_diff'].to_numpy()
-            if difficulty > difficulty_threshold:
-                # Get list of similar words from word2vec and append simpler word or, if none found, original work
-                try:
-                    similar_words = word2vec_model.most_similar(word, topn=20)
-                    possibilities = []
-                    for sim_word, word_sim in similar_words:
-                        sim_vector = self.vectorizer.transform([sim_word])
-                        sim_difficulty = self.regressor.predict(sim_vector)[0]
-
-                        if sim_difficulty <= difficulty:
-                            possibilities.append((sim_word, sim_difficulty))
-                            break
-                    if possibilities:
-                        lowest_diff = difficulty
-                        best_word = word
-                        for sim_word, sim_diff in possibilities: 
-                            if sim_diff < lowest_diff:
-                                lowest_diff = sim_diff
-                                best_word = sim_word
-                        simplified_words.append(best_word)
-                        changed_words.append((word, best_word))
-                    else:
-                        simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
@@ -513,7 +459,7 @@ def get_sentences(sentence):
     nonnative_simp, nonnative_changed = nonnative_model.simplify_sentence(sentence, difficulty_threshold=3)
     results["CWID-nonnative/ours"] = (nonnative_simp, nonnative_changed)
 
-    nonnative_simp2, nonnative_changed2 = nonnative_model.simplify_sentence_pretrain(sentence, difficulty_threshold=3)
+    nonnative_simp2, nonnative_changed2 = nonnative_model.simplify_sentence(sentence, difficulty_threshold=3, pretrained=True)
     results["CWID-nonnative/pretrained"] = (nonnative_simp2, nonnative_changed2)
 
     t5_model.simplify_sentence(sentence)
@@ -580,7 +526,7 @@ if __name__ == '__main__':
     print("=" * 100)
     print("CWID NON-NATIVE DATA: 0 - 10: similarity based on pretrained model")
     print("=" * 100)
-    nonnative_simp2, nonnative_changed2 = nonnative_model.simplify_sentence_pretrain(sentence, difficulty_threshold=3)
+    nonnative_simp2, nonnative_changed2 = nonnative_model.simplify_sentence(sentence, difficulty_threshold=3, pretrained=True)
     scores = scorer.score(sentence, nonnative_simp2)
     for key in scores:
         print(f'{key}: {scores[key]}')
