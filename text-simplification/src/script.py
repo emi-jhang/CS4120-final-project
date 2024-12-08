@@ -24,6 +24,8 @@ nltk.download('cmudict')
 d = cmudict.dict()
 from nltk.tokenize import word_tokenize
 from nltk.corpus import wordnet
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
 import joblib
 
 import re
@@ -42,9 +44,14 @@ import gensim.downloader as api
 model_path = "../../GoogleNews-vectors-negative300-SLIM.bin.gz"
 word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 our_model = Word2Vec.load("../../our_model.model")
+lemmatizer = WordNetLemmatizer()
 print("vars")
 
 scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+
+# Helper function to lemmatize a word 
+def lemmatize_word(word):
+    return lemmatizer.lemmatize(word.lower()) 
 
 def syllable_count(word):
     """Return the syllable count for a word."""
@@ -52,7 +59,26 @@ def syllable_count(word):
     if word in d:
         return max([len(list(y for y in x if y[-1].isdigit())) for x in d[word]])  # Get the max syllables
     else:
-        return None
+        return heuristic_syllable_count(word)
+
+def heuristic_syllable_count(word):
+    """Estimate syllable count using a simple heuristic if word is not in dictionary."""
+    # Heuristic method (simple rule: count the number of vowel clusters in the word)
+    vowels = "aeiou"
+    word = word.lower()
+    syllable_count = 0
+    prev_char_was_vowel = False
+    
+    for char in word:
+        if char in vowels:
+            if not prev_char_was_vowel:
+                syllable_count += 1
+            prev_char_was_vowel = True
+        else:
+            prev_char_was_vowel = False
+            
+    # Fallback to a minimum syllable count of 1
+    return syllable_count if syllable_count > 0 else 1
 
 def flesch_kincaid(text):
     """
@@ -71,7 +97,7 @@ def flesch_kincaid(text):
     num_words = len(words)
 
     # Count syllables in words
-    num_syllables = sum(syllable_count(word) for word in words if bool(re.fullmatch(r"[a-zA-Z]+(?:[-'][a-zA-Z]+)*", word)) == True)
+    num_syllables = sum(syllable_count(word) if syllable_count(word) is not None else 0 for word in words if bool(re.fullmatch(r"[a-zA-Z]+(?:[-'][a-zA-Z]+)*", word)) == True)
 
     # Calculate ASL and ASW
     asl = num_words / num_sentences if num_sentences > 0 else 0
@@ -119,6 +145,7 @@ class WCL:
 
         # Get difficulty of each word in the sentence from WCL dataset or, if not in dataset, our WCL regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
+            lemmatized_word = lemmatize_word(word)
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
@@ -133,11 +160,14 @@ class WCL:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        if sim_difficulty < difficulty and sim_word != word:
+                        lemmatized_sim_word = lemmatize_word(sim_word)
+
+                        if sim_difficulty < difficulty and lemmatized_sim_word != lemmatized_word:
+                            print(lemmatized_sim_word)
+                            print(lemmatized_word)
                             simplified_words.append(sim_word)
+                            changed_words.append((word, sim_word))
                             break
-                        else: 
-                            simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
@@ -199,6 +229,7 @@ class CWID_Prob:
 
         # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
+            lemmatized_word = lemmatize_word(word)
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
@@ -214,11 +245,12 @@ class CWID_Prob:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        if sim_difficulty < difficulty and sim_word != word:
+                        lemmatized_sim_word = lemmatize_word(sim_word)
+
+                        if sim_difficulty < difficulty and lemmatized_sim_word != lemmatized_word:
                             simplified_words.append(sim_word)
+                            changed_words.append((word, sim_word))
                             break
-                        else: 
-                            simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
@@ -277,6 +309,7 @@ class CWID_Bin:
 
         # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
+            lemmatized_word = lemmatize_word(word)
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
@@ -292,11 +325,12 @@ class CWID_Bin:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        if sim_difficulty < difficulty and sim_word != word:
+                        lemmatized_sim_word = lemmatize_word(sim_word)
+
+                        if sim_difficulty < difficulty and lemmatized_sim_word != lemmatized_word:
                             simplified_words.append(sim_word)
+                            changed_words.append((word, sim_word))
                             break
-                        else: 
-                            simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
@@ -355,7 +389,7 @@ class CWID_Non_Native:
 
         # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
-
+            lemmatized_word = lemmatize_word(word)
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
@@ -371,11 +405,12 @@ class CWID_Non_Native:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        if sim_difficulty < difficulty and sim_word != word:
+                        lemmatized_sim_word = lemmatize_word(sim_word)
+
+                        if sim_difficulty < difficulty and lemmatized_sim_word != lemmatized_word:
                             simplified_words.append(sim_word)
+                            changed_words.append((word, sim_word))
                             break
-                        else: 
-                            simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
