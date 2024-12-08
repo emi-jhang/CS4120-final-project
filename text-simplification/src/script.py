@@ -18,14 +18,12 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestClassifier
 import nltk
+nltk.download('averaged_perceptron_tagger_eng')
 nltk.download('punkt')
 from nltk.corpus import cmudict
 nltk.download('cmudict')
 d = cmudict.dict()
 from nltk.tokenize import word_tokenize
-from nltk.corpus import wordnet
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
 import joblib
 
 import re
@@ -44,14 +42,9 @@ import gensim.downloader as api
 model_path = "../../GoogleNews-vectors-negative300-SLIM.bin.gz"
 word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 our_model = Word2Vec.load("../../our_model.model")
-lemmatizer = WordNetLemmatizer()
 print("vars")
 
 scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
-
-# Helper function to lemmatize a word 
-def lemmatize_word(word):
-    return lemmatizer.lemmatize(word.lower()) 
 
 def syllable_count(word):
     """Return the syllable count for a word."""
@@ -59,26 +52,21 @@ def syllable_count(word):
     if word in d:
         return max([len(list(y for y in x if y[-1].isdigit())) for x in d[word]])  # Get the max syllables
     else:
-        return heuristic_syllable_count(word)
-
-def heuristic_syllable_count(word):
-    """Estimate syllable count using a simple heuristic if word is not in dictionary."""
-    # Heuristic method (simple rule: count the number of vowel clusters in the word)
-    vowels = "aeiou"
-    word = word.lower()
-    syllable_count = 0
-    prev_char_was_vowel = False
-    
-    for char in word:
-        if char in vowels:
-            if not prev_char_was_vowel:
-                syllable_count += 1
-            prev_char_was_vowel = True
-        else:
-            prev_char_was_vowel = False
-            
-    # Fallback to a minimum syllable count of 1
-    return syllable_count if syllable_count > 0 else 1
+        vowels = "aeiou"
+        word = word.lower()
+        syllable_count = 0
+        prev_char_was_vowel = False
+        
+        for char in word:
+            if char in vowels:
+                if not prev_char_was_vowel:
+                    syllable_count += 1
+                prev_char_was_vowel = True
+            else:
+                prev_char_was_vowel = False
+                
+        # Fallback to a minimum syllable count of 1
+        return syllable_count if syllable_count > 0 else 1
 
 def flesch_kincaid(text):
     """
@@ -140,12 +128,12 @@ class WCL:
         """
         # Tokenize the sentence into words
         words = nltk.word_tokenize(sentence)
+
         simplified_words = []
         changed_words = []
 
         # Get difficulty of each word in the sentence from WCL dataset or, if not in dataset, our WCL regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
-            lemmatized_word = lemmatize_word(word)
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
@@ -160,11 +148,7 @@ class WCL:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        lemmatized_sim_word = lemmatize_word(sim_word)
-
-                        if sim_difficulty < difficulty and lemmatized_sim_word != lemmatized_word:
-                            print(lemmatized_sim_word)
-                            print(lemmatized_word)
+                        if sim_difficulty < difficulty:
                             simplified_words.append(sim_word)
                             changed_words.append((word, sim_word))
                             break
@@ -175,8 +159,15 @@ class WCL:
                 simplified_words.append(word)
 
         simplified_sentence = " ".join(simplified_words)
-        print(simplified_sentence)
-        return simplified_sentence, changed_words
+         # Compare readability before and after
+        original_reading_ease = flesch_kincaid(sentence)
+        simplified_reading_ease = flesch_kincaid(simplified_sentence)
+
+        # If simplified sentence is more readable, return it; otherwise, return the original sentence
+        if simplified_reading_ease > original_reading_ease:
+            return simplified_sentence, changed_words
+        else:
+            return sentence, []  # No change made
 
 
 class CWID_Prob:
@@ -229,7 +220,6 @@ class CWID_Prob:
 
         # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
-            lemmatized_word = lemmatize_word(word)
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
@@ -245,12 +235,11 @@ class CWID_Prob:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        lemmatized_sim_word = lemmatize_word(sim_word)
-
-                        if sim_difficulty < difficulty and lemmatized_sim_word != lemmatized_word:
+                        if sim_difficulty < difficulty:
                             simplified_words.append(sim_word)
                             changed_words.append((word, sim_word))
                             break
+                    simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
@@ -258,7 +247,15 @@ class CWID_Prob:
                 simplified_words.append(word)
 
         simplified_sentence = " ".join(simplified_words)
-        return simplified_sentence, changed_words
+         # Compare readability before and after
+        original_reading_ease = flesch_kincaid(sentence)
+        simplified_reading_ease = flesch_kincaid(simplified_sentence)
+
+        # If simplified sentence is more readable, return it; otherwise, return the original sentence
+        if simplified_reading_ease > original_reading_ease:
+            return simplified_sentence, changed_words
+        else:
+            return sentence, []  # No change made
 
 class CWID_Bin:
     def __init__(self) -> None:
@@ -309,7 +306,6 @@ class CWID_Bin:
 
         # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
-            lemmatized_word = lemmatize_word(word)
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
@@ -325,9 +321,7 @@ class CWID_Bin:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        lemmatized_sim_word = lemmatize_word(sim_word)
-
-                        if sim_difficulty < difficulty and lemmatized_sim_word != lemmatized_word:
+                        if sim_difficulty < difficulty:
                             simplified_words.append(sim_word)
                             changed_words.append((word, sim_word))
                             break
@@ -338,7 +332,15 @@ class CWID_Bin:
                 simplified_words.append(word)
 
         simplified_sentence = " ".join(simplified_words)
-        return simplified_sentence, changed_words
+         # Compare readability before and after
+        original_reading_ease = flesch_kincaid(sentence)
+        simplified_reading_ease = flesch_kincaid(simplified_sentence)
+
+        # If simplified sentence is more readable, return it; otherwise, return the original sentence
+        if simplified_reading_ease > original_reading_ease:
+            return simplified_sentence, changed_words
+        else:
+            return sentence, []  # No change made
 
 class CWID_Non_Native:
     def __init__(self) -> None:
@@ -389,7 +391,6 @@ class CWID_Non_Native:
 
         # Get difficulty of each word in the sentence from CWID dataset or, if not in dataset, our CWID regressor, and if above a certain threshold, replace word using word2vec
         for word in words:
-            lemmatized_word = lemmatize_word(word)
             vector = self.vectorizer.transform([word])
             if word not in self.X:
                 difficulty = self.regressor.predict(vector)[0]  
@@ -405,9 +406,7 @@ class CWID_Non_Native:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        lemmatized_sim_word = lemmatize_word(sim_word)
-
-                        if sim_difficulty < difficulty and lemmatized_sim_word != lemmatized_word:
+                        if sim_difficulty < difficulty:
                             simplified_words.append(sim_word)
                             changed_words.append((word, sim_word))
                             break
@@ -418,7 +417,15 @@ class CWID_Non_Native:
                 simplified_words.append(word)
 
         simplified_sentence = " ".join(simplified_words)
-        return simplified_sentence, changed_words
+         # Compare readability before and after
+        original_reading_ease = flesch_kincaid(sentence)
+        simplified_reading_ease = flesch_kincaid(simplified_sentence)
+
+        # If simplified sentence is more readable, return it; otherwise, return the original sentence
+        if simplified_reading_ease > original_reading_ease:
+            return simplified_sentence, changed_words
+        else:
+            return sentence, []  # No change made
 
 class T5_Model:
     def __init__(self):
