@@ -7,8 +7,6 @@ import argparse
 import glob
 import os
 import os.path as osp
-import json
-from langdetect import detect
 
 import pandas as pd 
 import numpy as np
@@ -18,15 +16,10 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestClassifier
 import nltk
-nltk.download('averaged_perceptron_tagger_eng')
 nltk.download('punkt')
-from nltk.corpus import cmudict
-nltk.download('cmudict')
-d = cmudict.dict()
 from nltk.tokenize import word_tokenize
 import joblib
 
-import re
 from rouge_score import rouge_scorer
 from gensim.models import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
@@ -34,6 +27,7 @@ from gensim.models.keyedvectors import KeyedVectors
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 
+import textstat
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 
 # GLOBAL VARIABLES 
@@ -45,56 +39,6 @@ our_model = Word2Vec.load("../../our_model.model")
 print("vars")
 
 scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
-
-def syllable_count(word):
-    """Return the syllable count for a word."""
-    word = word.lower()
-    if word in d:
-        return max([len(list(y for y in x if y[-1].isdigit())) for x in d[word]])  # Get the max syllables
-    else:
-        vowels = "aeiou"
-        word = word.lower()
-        syllable_count = 0
-        prev_char_was_vowel = False
-        
-        for char in word:
-            if char in vowels:
-                if not prev_char_was_vowel:
-                    syllable_count += 1
-                prev_char_was_vowel = True
-            else:
-                prev_char_was_vowel = False
-                
-        # Fallback to a minimum syllable count of 1
-        return syllable_count if syllable_count > 0 else 1
-
-def flesch_kincaid(text):
-    """
-    Calculate Flesch Reading Ease and Flesch-Kincaid Grade Level for a given text.
-    """
-    if text.strip() == '' or detect(text) != 'en':
-        return -1
-    
-    # Split text into sentences
-    sentences = re.split(r'[.!?]', text)
-    sentences = [s.strip() for s in sentences if s.strip()]  # Remove empty strings
-    num_sentences = len(sentences)
-
-    # Split text into words
-    words = re.findall(r'\w+', text)
-    num_words = len(words)
-
-    # Count syllables in words
-    num_syllables = sum(syllable_count(word) if syllable_count(word) is not None else 0 for word in words if bool(re.fullmatch(r"[a-zA-Z]+(?:[-'][a-zA-Z]+)*", word)) == True)
-
-    # Calculate ASL and ASW
-    asl = num_words / num_sentences if num_sentences > 0 else 0
-    asw = num_syllables / num_words if num_words > 0 else 0
-
-    # Calculate Flesch Reading Ease
-    reading_ease = 206.835 - (1.015 * asl) - (84.6 * asw)
-
-    return reading_ease
 
 class WCL:
     def __init__(self):
@@ -160,8 +104,8 @@ class WCL:
 
         simplified_sentence = " ".join(simplified_words)
          # Compare readability before and after
-        original_reading_ease = flesch_kincaid(sentence)
-        simplified_reading_ease = flesch_kincaid(simplified_sentence)
+        original_reading_ease = textstat.flesch_reading_ease(sentence)
+        simplified_reading_ease = textstat.flesch_reading_ease(simplified_sentence)
 
         # If simplified sentence is more readable, return it; otherwise, return the original sentence
         if simplified_reading_ease > original_reading_ease:
@@ -248,8 +192,8 @@ class CWID_Prob:
 
         simplified_sentence = " ".join(simplified_words)
          # Compare readability before and after
-        original_reading_ease = flesch_kincaid(sentence)
-        simplified_reading_ease = flesch_kincaid(simplified_sentence)
+        original_reading_ease = textstat.flesch_reading_ease(sentence)
+        simplified_reading_ease = textstat.flesch_reading_ease(simplified_sentence)
 
         # If simplified sentence is more readable, return it; otherwise, return the original sentence
         if simplified_reading_ease > original_reading_ease:
@@ -333,8 +277,8 @@ class CWID_Bin:
 
         simplified_sentence = " ".join(simplified_words)
          # Compare readability before and after
-        original_reading_ease = flesch_kincaid(sentence)
-        simplified_reading_ease = flesch_kincaid(simplified_sentence)
+        original_reading_ease = textstat.flesch_reading_ease(sentence)
+        simplified_reading_ease = textstat.flesch_reading_ease(simplified_sentence)
 
         # If simplified sentence is more readable, return it; otherwise, return the original sentence
         if simplified_reading_ease > original_reading_ease:
@@ -418,8 +362,8 @@ class CWID_Non_Native:
 
         simplified_sentence = " ".join(simplified_words)
          # Compare readability before and after
-        original_reading_ease = flesch_kincaid(sentence)
-        simplified_reading_ease = flesch_kincaid(simplified_sentence)
+        original_reading_ease = textstat.flesch_reading_ease(sentence)
+        simplified_reading_ease = textstat.flesch_reading_ease(simplified_sentence)
 
         # If simplified sentence is more readable, return it; otherwise, return the original sentence
         if simplified_reading_ease > original_reading_ease:
@@ -512,8 +456,8 @@ if __name__ == '__main__':
     scores = scorer.score(sentence, wcl_simp)
     for key in scores:
         print(f'{key}: {scores[key]}')
-    print("Original Sentence Reading Ease:", flesch_kincaid(sentence))
-    print("Simplified Sentence Reading Ease:", flesch_kincaid(wcl_simp))
+    print("Original Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((sentence)))
+    print("Simplified Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((wcl_simp)))
     print("-" * 50)
     print("Simplified Sentence:", wcl_simp)
     print("Words Changed:", wcl_changed, "\n")
@@ -525,8 +469,8 @@ if __name__ == '__main__':
     scores = scorer.score(sentence, prob_simp)
     for key in scores:
         print(f'{key}: {scores[key]}')
-    print("Original Sentence Reading Ease:", flesch_kincaid(sentence))
-    print("Simplified Sentence Reading Ease:", flesch_kincaid(prob_simp))
+    print("Original Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((sentence)))
+    print("Simplified Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((prob_simp)))
     print("-" * 50)
     print("Simplified Sentence:", prob_simp)
     print("Words Changed:", prob_changed, "\n")
@@ -538,8 +482,8 @@ if __name__ == '__main__':
     scores = scorer.score(sentence, nonnative_simp)
     for key in scores:
         print(f'{key}: {scores[key]}')
-    print("Original Sentence Reading Ease:", flesch_kincaid(sentence))
-    print("Simplified Sentence Reading Ease:", flesch_kincaid(nonnative_simp))
+    print("Original Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((sentence)))
+    print("Simplified Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((nonnative_simp)))
     print("-" * 50)
     print("Simplified Sentence:", nonnative_simp)
     print("Words Changed:", nonnative_changed, "\n")
@@ -551,8 +495,8 @@ if __name__ == '__main__':
     scores = scorer.score(sentence, nonnative_simp2)
     for key in scores:
         print(f'{key}: {scores[key]}')
-    print("Original Sentence Reading Ease:", flesch_kincaid(sentence))
-    print("Simplified Sentence Reading Ease:", flesch_kincaid(nonnative_simp2))
+    print("Original Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((sentence)))
+    print("Simplified Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((nonnative_simp2)))
     print("-" * 50)
     print("Simplified Sentence:", nonnative_simp2)
     print("Words Changed:", nonnative_changed2, "\n")
@@ -564,7 +508,7 @@ if __name__ == '__main__':
     scores = scorer.score(sentence, t5_simp)
     for key in scores:
         print(f'{key}: {scores[key]}')
-    print("Original Sentence Reading Ease:", flesch_kincaid(sentence))
-    print("Simplified Sentence Reading Ease:", flesch_kincaid(t5_simp))
+    print("Original Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((sentence)))
+    print("Simplified Sentence Flesch Reading Ease:", textstat.flesch_reading_ease((t5_simp)))
     print("-" * 50)
     print("Simplified Sentence:", t5_simp)
