@@ -128,21 +128,16 @@ class WCL:
                 try:
                     # Get list of similar words from word2vec and append simpler word or, if none found, original work
                     similar_words = word2vec_model.most_similar(word, topn=15)
-                    lowest_difficulty_word = word
-                    lowest_difficulty = difficulty
                     # Loop through similar words and only use if difficulty is lower so that we get the lowest difficulty word to swap in
                     for sim_word, word_sim in similar_words:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        if sim_difficulty < lowest_difficulty:
-                            lowest_difficulty_word = sim_word
-                            lowest_difficulty = sim_difficulty
-                    
-                    simplified_words.append(lowest_difficulty_word)
-                    # Update lowest difficulty only if simpler word is found
-                    if lowest_difficulty_word != word:
-                        changed_words.append((word, lowest_difficulty_word))
+                        if sim_difficulty < difficulty and sim_word != word:
+                            simplified_words.append(sim_word)
+                            break
+                        else: 
+                            simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
@@ -150,6 +145,7 @@ class WCL:
                 simplified_words.append(word)
 
         simplified_sentence = " ".join(simplified_words)
+        print(simplified_sentence)
         return simplified_sentence, changed_words
 
 
@@ -213,21 +209,16 @@ class CWID_Prob:
                 try:
                     # Get list of similar words from word2vec and append simpler word or, if none found, original work
                     similar_words = word2vec_model.most_similar(word, topn=15)
-                    lowest_difficulty_word = word
-                    lowest_difficulty = difficulty
                     # Loop through similar words and only use if difficulty is lower so that we get the lowest difficulty word to swap in
                     for sim_word, word_sim in similar_words:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        if sim_difficulty < lowest_difficulty:
-                            lowest_difficulty_word = sim_word
-                            lowest_difficulty = sim_difficulty
-                    
-                    simplified_words.append(lowest_difficulty_word)
-                    # Update lowest difficulty only if simpler word is found
-                    if lowest_difficulty_word != word:
-                        changed_words.append((word, lowest_difficulty_word))
+                        if sim_difficulty < difficulty and sim_word != word:
+                            simplified_words.append(sim_word)
+                            break
+                        else: 
+                            simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
@@ -296,21 +287,16 @@ class CWID_Bin:
                 try:
                     # Get list of similar words from word2vec and append simpler word or, if none found, original work
                     similar_words = word2vec_model.most_similar(word, topn=15)
-                    lowest_difficulty_word = word
-                    lowest_difficulty = difficulty
                     # Loop through similar words and only use if difficulty is lower so that we get the lowest difficulty word to swap in
                     for sim_word, word_sim in similar_words:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        if sim_difficulty < lowest_difficulty:
-                            lowest_difficulty_word = sim_word
-                            lowest_difficulty = sim_difficulty
-                    
-                    simplified_words.append(lowest_difficulty_word)
-                    # Update lowest difficulty only if simpler word is found
-                    if lowest_difficulty_word != word:
-                        changed_words.append((word, lowest_difficulty_word))
+                        if sim_difficulty < difficulty and sim_word != word:
+                            simplified_words.append(sim_word)
+                            break
+                        else: 
+                            simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
@@ -379,24 +365,17 @@ class CWID_Non_Native:
                 # Get list of similar words from word2vec and append simpler word or, if none found, original work
                 try:
                     # Get list of similar words from word2vec and append simpler word or, if none found, original work
-                    similar_words = self.model.most_similar(word, topn=15)
-                    if pretrained == True:
-                        similar_words = self.pretrained_model.most_similar(word, topn=15)
-                    lowest_difficulty_word = word
-                    lowest_difficulty = difficulty
+                    similar_words = word2vec_model.most_similar(word, topn=15)
                     # Loop through similar words and only use if difficulty is lower so that we get the lowest difficulty word to swap in
                     for sim_word, word_sim in similar_words:
                         sim_vector = self.vectorizer.transform([sim_word])
                         sim_difficulty = self.regressor.predict(sim_vector)[0]
 
-                        if sim_difficulty < lowest_difficulty:
-                            lowest_difficulty_word = sim_word
-                            lowest_difficulty = sim_difficulty
-                    
-                    simplified_words.append(lowest_difficulty_word)
-                    # Update lowest difficulty only if simpler word is found
-                    if lowest_difficulty_word != word:
-                        changed_words.append((word, lowest_difficulty_word))
+                        if sim_difficulty < difficulty and sim_word != word:
+                            simplified_words.append(sim_word)
+                            break
+                        else: 
+                            simplified_words.append(word)
                 
                 except KeyError:
                     simplified_words.append(word)
