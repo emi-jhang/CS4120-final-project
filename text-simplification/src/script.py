@@ -409,7 +409,7 @@ def get_sentences(sentence):
     prob_model = CWID_Prob()
     bin_model = CWID_Bin()
     nonnative_model = CWID_Non_Native()
-    t5_model = T5_model()
+    t5_model = T5_Model()
     results = {}
 
     wcl_simp, wcl_changed = wcl_model.simplify_sentence(sentence, difficulty_threshold=2.5)
