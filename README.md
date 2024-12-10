@@ -15,7 +15,7 @@ We used two datasets for our custom model:
 
 For our T5 model we used the following dataset: 
 
-1. 
+1. **WikiLarge Text Simplification:** Dataset containing pairs of "normal" and "simple" sentences.
 
 
 ****
@@ -32,6 +32,9 @@ For our T5 model we used the following dataset:
 
 2. **T5 Model:** We trained a T5 Model for text simplificaion to compare to our model
 
+    _a) We finetuned the hyperparameters of our T5 model when trained on our text simplification dataset, and proceeded with the batch size, epochs, and learning rates that produced the least training and validation loss.
+
+    _b) Given a sentence, the T5 model will output a simplified version. 
 ****
 
 ### **Evaluation:**
